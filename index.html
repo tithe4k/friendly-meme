@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор + Конвертер</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --bg-alt: #eaf0f7;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-strong: #ffffff;
+      --panel-soft: #eef3fa;
+      --surface: #dfeaf9;
+      --surface-strong: #cfe0f8;
+      --text: #172334;
+      --text-soft: #5e6d82;
+      --text-faint: #8ea1b6;
+      --accent: #3b82f6;
+      --accent-strong: #265fd4;
+      --accent-soft: rgba(59, 130, 246, 0.12);
+      --danger: #e05a5a;
+      --success: #2fb77f;
+      --warning: #ffb822;
+      --shadow: 0 18px 42px rgba(29, 48, 82, 0.12);
+      --border: rgba(127, 143, 164, 0.2);
+      --divider: rgba(148, 163, 184, 0.24);
+      --history-item: rgba(51, 65, 85, 0.04);
+      --button: #eef4ff;
+      --button-hover: #e2edf9;
+      --button-press: #d6e5fb;
+      --button-operator: #f0f5ff;
+      --button-equal: linear-gradient(135deg, #3b82f6, #2563eb);
+      --button-equal-text: #ffffff;
+      --output-bg: #f8fbff;
+    }
+
+    body[data-theme="dark"] {
+      --bg: #0d1726;
+      --bg-alt: #101d2f;
+      --panel: rgba(17, 25, 37, 0.88);
+      --panel-strong: #111d2d;
+      --panel-soft: #16253a;
+      --surface: #1a2d45;
+      --surface-strong: #213a5d;
+      --text: #edf4ff;
+      --text-soft: #b7c6dd;
+      --text-faint: #8ba2c3;
+      --accent: #6aa7ff;
+      --accent-strong: #8ab9ff;
+      --accent-soft: rgba(106, 167, 255, 0.18);
+      --danger: #ff7c7c;
+      --success: #6ce0b3;
+      --warning: #ffd166;
+      --shadow: 0 22px 52px rgba(2, 6, 23, 0.5);
+      --border: rgba(148, 163, 184, 0.14);
+      --divider: rgba(148, 163, 184, 0.12);
+      --history-item: rgba(148, 163, 184, 0.05);
+      --button: #17273d;
+      --button-hover: #1d3153;
+      --button-press: #27466f;
+      --button-operator: #13253d;
+      --button-equal: linear-gradient(135deg, #6aa7ff, #4e8df2);
+      --button-equal-text: #061120;
+      --output-bg: rgba(17, 25, 37, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+      color: var(--text);
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(59, 130, 246, 0.4);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      width: min(1200px, 100%);
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 18px;
+      border-bottom: 1px solid var(--divider);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 2vw, 2.3rem);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .theme-toggle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--button);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px var(--border);
+      font-size: 1.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      background: var(--button-hover);
+    }
+
+    .theme-toggle:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      padding: 18px 24px 0;
+    }
+
+    .tab {
+      flex: 1 1 0;
+      min-height: 48px;
+      border-radius: 14px 14px 0 0;
+      background: transparent;
+      color: var(--text-soft);
+      font-weight: 700;
+      border: 1px solid transparent;
+      border-bottom: none;
+      position: relative;
+    }
+
+    .tab:hover {
+      background: var(--panel-soft);
+      color: var(--text);
+    }
+
+    .tab.is-active {
+      background: var(--panel-strong);
+      color: var(--text);
+      border-color: var(--divider);
+      box-shadow: inset 0 -1px 0 var(--panel-strong);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(300px, 1fr);
+      gap: 20px;
+      padding: 0 24px 24px;
+      background: var(--panel-strong);
+    }
+
+    .panel {
+      display: none;
+      min-height: 560px;
+      padding: 20px 0 0;
+    }
+
+    .panel.is-active {
+      display: block;
+    }
+
+    .calculator-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .calc-display {
+      background: var(--output-bg);
+      border: 1px solid var(--divider);
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .calc-expression {
+      min-height: 36px;
+      text-align: right;
+      font-size: clamp(1.15rem, 2vw, 1.5rem);
+      color: var(--text-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .calc-result {
+      min-height: 52px;
+      text-align: right;
+      font-size: clamp(2.1rem, 3vw, 3.2rem);
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .key {
+      min-height: 68px;
+      border-radius: 16px;
+      background: var(--button);
+      color: var(--text);
+      font-size: clamp(1.2rem, 2vw, 1.6rem);
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .key:hover {
+      background: var(--button-hover);
+    }
+
+    .key:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .key.operator {
+      background: var(--button-operator);
+      color: var(--accent-strong);
+    }
+
+    .key.operator:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .key.action {
+      background: rgba(239, 68, 68, 0.08);
+      color: var(--danger);
+    }
+
+    .key.action:hover {
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    .key.equal {
+      background: var(--button-equal);
+      color: var(--button-equal-text);
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.28);
+    }
+
+    .key.equal:hover {
+      filter: brightness(1.02);
+    }
+
+    .key.zero {
+      grid-column: span 2;
+    }
+
+    .converter-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 100%;
+    }
+
+    .converter-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-group label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .converter-select,
+    .text-input {
+      width: 100%;
+      min-height: 52px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 1.02rem;
+    }
+
+    .converter-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+
+    .swap-button {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 12px;
+      background: var(--button);
+      color: var(--text);
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .swap-button:hover {
+      background: var(--button-hover);
+    }
+
+    .swap-button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .output-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px 18px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--divider);
+      background: var(--output-bg);
+    }
+
+    .output-box .label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+
+    .converted-value {
+      font-size: clamp(1.7rem, 2.7vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+    }
+
+    .currency-note {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .history-panel {
+      padding-top: 20px;
+      border-left: 1px solid var(--divider);
+      display: flex;
+      flex-direction: column;
+      min-height: 560px;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 0 10px;
+    }
+
+    .history-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .clear-history {
+      background: transparent;
+      color: var(--text-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .clear-history:hover {
+      background: var(--panel-soft);
+      color: var(--text);
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: var(--history-item);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 12px 12px 14px;
+    }
+
+    .history-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .history-kind {
+      font-size: 0.67rem;
+      color: var(--text-faint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .history-expression {
+      color: var(--text);
+      font-size: 0.96rem;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-result {
+      font-size: 1.08rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .remove-history {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(224, 90, 90, 0.08);
+      color: var(--danger);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .remove-history:hover {
+      background: rgba(224, 90, 90, 0.14);
+    }
+
+    .empty-history {
+      margin: 10px 0 0;
+      color: var(--text-soft);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      padding: 16px 10px 0;
+    }
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px 22px;
+      color: var(--text-soft);
+      border-top: 1px solid var(--divider);
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 920px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .history-panel {
+        border-left: none;
+        border-top: 1px solid var(--divider);
+        min-height: initial;
+        padding-top: 18px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 12px;
+      }
+
+      .topbar,
+      .tabs,
+      .workspace {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .tabs {
+        gap: 8px;
+      }
+
+      .key {
+        min-height: 60px;
+        border-radius: 14px;
+      }
+
+      .calculator-panel,
+      .converter-panel {
+        gap: 14px;
+      }
+
+      .converter-row {
+        grid-template-columns: 1fr;
+      }
+
+      .calc-display {
+        min-height: 120px;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="title-wrap">
+        <p class="eyebrow">Утилиты</p>
+        <h1>Калькулятор + Конвертер</h1>
+      </div>
+      <button
+        id="themeToggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Переключить тему"
+      >
+        🌙
+      </button>
+    </header>
+
+    <nav class="tabs" aria-label="Переключение разделов">
+      <button class="tab is-active" type="button" data-tab="calculator">Калькулятор</button>
+      <button class="tab" type="button" data-tab="converter">Конвертер</button>
+    </nav>
+
+    <main class="workspace">
+      <section id="calculatorPanel" class="panel calculator-panel is-active" aria-label="Калькулятор">
+        <div class="calc-display" aria-live="polite">
+          <div id="calcExpression" class="calc-expression">0</div>
+          <div id="calcResult" class="calc-result">0</div>
+        </div>
+
+        <div class="keypad" aria-label="Кнопки калькулятора">
+          <button class="key action" type="button" data-action="clear" aria-label="Полная очистка">C</button>
+          <button class="key action" type="button" data-action="backspace" aria-label="Удалить последний символ">⌫</button>
+          <button class="key action" type="button" data-action="sign" aria-label="Сменить знак">±</button>
+          <button class="key operator" type="button" data-action="operator" data-value="/" aria-label="Разделить">÷</button>
+
+          <button class="key" type="button" data-action="digit" data-value="7" aria-label="Семь">7</button>
+          <button class="key" type="button" data-action="digit" data-value="8" aria-label="Восемь">8</button>
+          <button class="key" type="button" data-action="digit" data-value="9" aria-label="Девять">9</button>
+          <button class="key operator" type="button" data-action="operator" data-value="*" aria-label="Умножить">×</button>
+
+          <button class="key" type="button" data-action="digit" data-value="4" aria-label="Четыре">4</button>
+          <button class="key" type="button" data-action="digit" data-value="5" aria-label="Пять">5</button>
+          <button class="key" type="button" data-action="digit" data-value="6" aria-label="Шесть">6</button>
+          <button class="key operator" type="button" data-action="operator" data-value="-" aria-label="Вычесть">−</button>
+
+          <button class="key" type="button" data-action="digit" data-value="1" aria-label="Один">1</button>
+          <button class="key" type="button" data-action="digit" data-value="2" aria-label="Два">2</button>
+          <button class="key" type="button" data-action="digit" data-value="3" aria-label="Три">3</button>
+          <button class="key operator" type="button" data-action="operator" data-value="+" aria-label="Сложить">+</button>
+
+          <button class="key" type="button" data-action="percent" aria-label="Процент">%</button>
+          <button class="key zero" type="button" data-action="digit" data-value="0" aria-label="Ноль">0</button>
+          <button class="key" type="button" data-action="decimal" aria-label="Точка">.</button>
+          <button class="key equal" type="button" data-action="equals" aria-label="Равно">=</button>
+        </div>
+      </section>
+
+      <section id="converterPanel" class="panel converter-panel" aria-label="Конвертер">
+        <div class="converter-controls">
+          <div class="field-group">
+            <label for="categorySelect">Категория</label>
+            <select id="categorySelect" class="converter-select" aria-label="Выбор категории">
+              <option value="length">Длина</option>
+              <option value="weight">Вес</option>
+              <option value="temperature">Температура</option>
+              <option value="volume">Объём</option>
+              <option value="speed">Скорость</option>
+              <option value="currency">Валюта</option>
+            </select>
+          </div>
+
+          <div class="converter-row">
+            <div class="field-group">
+              <label for="fromValue">Из</label>
+              <input
+                id="fromValue"
+                class="text-input"
+                type="text"
+                inputmode="decimal"
+                placeholder="Введите число"
+                aria-label="Сумма для конвертации"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="fromUnit">Единица</label>
+              <select id="fromUnit" class="converter-select" aria-label="Единица измерения исходного значения"></select>
+            </div>
+          </div>
+
+          <button id="swapUnits" class="swap-button" type="button" aria-label="Поменять единицы">Поменять единицы</button>
+
+          <div class="converter-row">
+            <div class="field-group">
+              <label for="toValue">В</label>
+              <input
+                id="toValue"
+                class="text-input"
+                type="text"
+                readonly
+                aria-live="polite"
+                aria-label="Результат конвертации"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="toUnit">Единица</label>
+              <select id="toUnit" class="converter-select" aria-label="Единица измерения целевого значения"></select>
+            </div>
+          </div>
+
+          <div class="output-box">
+            <span class="label">Результат</span>
+            <div id="convertedValue" class="converted-value">0</div>
+          </div>
+
+          <p id="currencyNote" class="currency-note">Демо-курсы: валюта использует фиксированные демонстрационные курсы.</p>
+        </div>
+      </section>
+
+      <aside class="history-panel" aria-label="История операций">
+        <div class="history-header">
+          <h2>История</h2>
+          <button id="clearHistory" class="clear-history" type="button">Очистить историю</button>
+        </div>
+        <ul id="historyList" class="history-list" aria-live="polite"></ul>
+      </aside>
+    </main>
+
+    <footer>© 2026 Калькулятор + Конвертер</footer>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const THEME_KEY = "calculator-theme";
+      const HISTORY_KEY = "calculator-history-v1";
+
+      const tabs = document.querySelectorAll(".tab");
+      const panels = {
+        calculator: document.getElementById("calculatorPanel"),
+        converter: document.getElementById("converterPanel")
+      };
+
+      const themeToggle = document.getElementById("themeToggle");
+
+      const calcExpressionEl = document.getElementById("calcExpression");
+      const calcResultEl = document.getElementById("calcResult");
+      const historyListEl = document.getElementById("historyList");
+      const clearHistoryBtn = document.getElementById("clearHistory");
+
+      const categorySelect = document.getElementById("categorySelect");
+      const fromValueInput = document.getElementById("fromValue");
+      const toValueInput = document.getElementById("toValue");
+      const fromUnitSelect = document.getElementById("fromUnit");
+      const toUnitSelect = document.getElementById("toUnit");
+      const swapUnitsBtn = document.getElementById("swapUnits");
+      const currencyNote = document.getElementById("currencyNote");
+      const convertedValueEl = document.getElementById("convertedValue");
+
+      const UNIT_GROUPS = {
+        length: {
+          mm: 0.001,
+          cm: 0.01,
+          m: 1,
+          km: 1000,
+          in: 0.0254,
+          ft: 0.3048,
+          mi: 1609.344
+        },
+        weight: {
+          mg: 0.001,
+          g: 1,
+          kg: 1000,
+          t: 1000000,
+          oz: 28.349523125,
+          lb: 453.59237
+        },
+        temperature: {
+          C: "C",
+          F: "F",
+          K: "K"
+        },
+        volume: {
+          ml: 0.001,
+          l: 1,
+          m3: 1000,
+          usgal: 3.785411784
+        },
+        speed: {
+          "m/s": 1,
+          "km/h": 0.2777777778,
+          "mph": 0.44704,
+          knot: 0.5144444444
+        },
+        currency: {
+          USD: 1,
+          EUR: 0.92,
+          GBP: 0.79,
+          JPY: 156.78,
+          RUB: 90.45,
+          CNY: 7.24
+        }
+      };
+
+      const UNIT_LABELS = {
+        length: {
+          mm: "мм",
+          cm: "см",
+          m: "м",
+          km: "км",
+          in: "дюйм",
+          ft: "фут",
+          mi: "миля"
+        },
+        weight: {
+          mg: "мг",
+          g: "г",
+          kg: "кг",
+          t: "т",
+          oz: "унция",
+          lb: "фунт"
+        },
+        temperature: {
+          C: "°C",
+          F: "°F",
+          K: "K"
+        },
+        volume: {
+          ml: "мл",
+          l: "л",
+          m3: "м³",
+          usgal: "галлон США"
+        },
+        speed: {
+          "m/s": "м/с",
+          "km/h": "км/ч",
+          "mph": "миль/ч",
+          knot: "узел"
+        },
+        currency: {
+          USD: "USD",
+          EUR: "EUR",
+          GBP: "GBP",
+          JPY: "JPY",
+          RUB: "RUB",
+          CNY: "CNY"
+        }
+      };
+
+      let history = [];
+
+      const calculatorState = {
+        expression: "",
+        lastActionWasEvaluate: false
+      };
+
+      function readHistory() {
+        try {
+          const raw = localStorage.getItem(HISTORY_KEY);
+          history = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(history)) {
+            history = [];
+          }
+        } catch (error) {
+          history = [];
+        }
+      }
+
+      function saveHistory() {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 20)));
+      }
+
+      function formatHistoryLabel(kind) {
+        return kind === "calculator" ? "Калькулятор" : "Конвертер";
+      }
+
+      function renderHistory() {
+        historyListEl.innerHTML = "";
+
+        if (history.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "empty-history";
+          empty.textContent = "Пока нет сохранённых вычислений. Начните с калькулятора или конвертера.";
+          historyListEl.appendChild(empty);
+          return;
+        }
+
+        history.forEach((item) => {
+          const listItem = document.createElement("li");
+          listItem.className = "history-item";
+
+          const meta = document.createElement("div");
+          meta.className = "history-meta";
+
+          const kind = document.createElement("span");
+          kind.className = "history-kind";
+          kind.textContent = formatHistoryLabel(item.type);
+
+          const expression = document.createElement("div");
+          expression.className = "history-expression";
+          expression.textContent = item.label;
+
+          const result = document.createElement("div");
+          result.className = "history-result";
+          result.textContent = item.value;
+
+          meta.appendChild(kind);
+          meta.appendChild(expression);
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "remove-history";
+          removeBtn.setAttribute("aria-label", "Удалить запись из истории");
+          removeBtn.textContent = "×";
+          removeBtn.addEventListener("click", () => {
+            history = history.filter((entry) => entry.id !== item.id);
+            saveHistory();
+            renderHistory();
+          });
+
+          listItem.appendChild(meta);
+          listItem.appendChild(result);
+          listItem.appendChild(removeBtn);
+
+          historyListEl.appendChild(listItem);
+        });
+      }
+
+      function addHistoryRecord(type, label, value) {
+        const record = {
+          id: Date.now() + Math.random(),
+          type,
+          label,
+          value: String(value)
+        };
+
+        history = [record, ...history].slice(0, 20);
+        saveHistory();
+        renderHistory();
+      }
+
+      function clearHistory() {
+        history = [];
+        saveHistory();
+        renderHistory();
+      }
+
+      function applyTheme(theme) {
+        document.body.setAttribute("data-theme", theme);
+        const icon = theme === "dark" ? "☀️" : "🌙";
+        themeToggle.textContent = icon;
+        localStorage.setItem(THEME_KEY, theme);
+      }
+
+      function initTheme() {
+        const storedTheme = localStorage.getItem(THEME_KEY);
+        const preferredDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const initialTheme = storedTheme || (preferredDark ? "dark" : "light");
+        applyTheme(initialTheme);
+      }
+
+      function setActiveTab(tabName) {
+        tabs.forEach((tab) => {
+          const isActive = tab.dataset.tab === tabName;
+          tab.classList.toggle("is-active", isActive);
+        });
+
+        Object.entries(panels).forEach(([key, panel]) => {
+          panel.classList.toggle("is-active", key === tabName);
+        });
+      }
+
+      function isOperatorChar(char) {
+        return ["+", "-", "*", "/"].includes(char);
+      }
+
+      function prettifyExpression(expression) {
+        if (!expression) {
+          return "0";
+        }
+
+        return expression
+          .replace(/\*/g, " × ")
+          .replace(/\//g, " ÷ ")
+          .replace(/\+/g, " + ")
+          .replace(/-/g, " − ");
+      }
+
+      function formatCalculatorNumber(value) {
+        if (!Number.isFinite(value)) {
+          return "Ошибка";
+        }
+
+        if (Math.abs(value) < 1e-12) {
+          return "0";
+        }
+
+        if (Math.abs(value) >= 1e15 || (Math.abs(value) > 0 && Math.abs(value) < 1e-6)) {
+          return Number(value).toExponential(6).replace(/\.?0+e/, "e").replace(/e\+?/, "e");
+        }
+
+        const rounded = Number.parseFloat(Number(value).toPrecision(12));
+        return String(rounded).replace(/(\.\d*?[1-9])0+$/g, "$1").replace(/\.0+$/g, "");
+      }
+
+      function tokenizeExpression(expression) {
+        const tokens = [];
+        let numberBuffer = "";
+        let i = 0;
+
+        while (i < expression.length) {
+          const char = expression[i];
+
+          if (/[0-9.]/.test(char)) {
+            numberBuffer += char;
+            i += 1;
+            continue;
+          }
+
+          if (char === "-" && (i === 0 || isOperatorChar(expression[i - 1]))) {
+            tokens.push("u-");
+            i += 1;
+            continue;
+          }
+
+          if (isOperatorChar(char)) {
+            if (numberBuffer) {
+              tokens.push(Number(numberBuffer));
+              numberBuffer = "";
+            }
+
+            tokens.push(char);
+            i += 1;
+            continue;
+          }
+
+          if (char === " ") {
+            i += 1;
+            continue;
+          }
+
+          throw new Error("Некорректное выражение");
+        }
+
+        if (numberBuffer) {
+          tokens.push(Number(numberBuffer));
+        }
+
+        return tokens;
+      }
+
+      function getOperatorPrecedence(operator) {
+        if (operator === "u-") {
+          return 3;
+        }
+        if (operator === "*" || operator === "/") {
+          return 2;
+        }
+        if (operator === "+" || operator === "-") {
+          return 1;
+        }
+        return 0;
+      }
+
+      function applyOperator(values, operator) {
+        if (operator === "u-") {
+          if (values.length === 0) {
+            throw new Error("Некорректное выражение");
+          }
+          const value = values.pop();
+          values.push(-value);
+          return;
+        }
+
+        if (values.length < 2) {
+          throw new Error("Некорректное выражение");
+        }
+
+        const right = values.pop();
+        const left = values.pop();
+
+        if (operator === "+") {
+          values.push(left + right);
+        } else if (operator === "-") {
+          values.push(left - right);
+        } else if (operator === "*") {
+          values.push(left * right);
+        } else if (operator === "/") {
+          if (Math.abs(right) < Number.EPSILON) {
+            throw new Error("Деление на ноль");
+          }
+          values.push(left / right);
+        } else {
+          throw new Error("Некорректная операция");
+        }
+      }
+
+      function evaluateExpression(expression) {
+        const cleanExpression = expression.replace(/\s+/g, "");
+
+        if (!cleanExpression) {
+          return 0;
+        }
+
+        const tokens = tokenizeExpression(cleanExpression);
+        const values = [];
+        const operators = [];
+
+        for (const token of tokens) {
+          if (typeof token === "number") {
+            values.push(token);
+            continue;
+          }
+
+          if (token === "u-") {
+            while (
+              operators.length > 0 &&
+              getOperatorPrecedence(operators[operators.length - 1]) > getOperatorPrecedence(token)
+            ) {
+              applyOperator(values, operators.pop());
+            }
+            operators.push(token);
+            continue;
+          }
+
+          while (
+            operators.length > 0 &&
+            getOperatorPrecedence(operators[operators.length - 1]) >= getOperatorPrecedence(token)
+          ) {
+            applyOperator(values, operators.pop());
+          }
+
+          operators.push(token);
+        }
+
+        while (operators.length > 0) {
+          applyOperator(values, operators.pop());
+        }
+
+        if (values.length !== 1) {
+          throw new Error("Некорректное выражение");
+        }
+
+        const result = values[0];
+
+        if (!Number.isFinite(result)) {
+          throw new Error("Ошибка");
+        }
+
+        return result;
+      }
+
+      function updateCalculatorDisplay() {
+        const expressionText = calculatorState.expression ? prettifyExpression(calculatorState.expression) : "0";
+        calcExpressionEl.textContent = expressionText;
+
+        if (!calculatorState.expression) {
+          calcResultEl.textContent = "0";
+          return;
+        }
+
+        try {
+          const value = evaluateExpression(calculatorState.expression);
+          calcResultEl.textContent = formatCalculatorNumber(value);
+        } catch (error) {
+          const message = error && error.message === "Деление на ноль" ? "Деление на ноль" : "Ошибка";
+          calcResultEl.textContent = message;
+        }
+      }
+
+      function handleCalculatorDigit(value) {
+        if (calculatorState.lastActionWasEvaluate) {
+          calculatorState.expression = "";
+          calculatorState.lastActionWasEvaluate = false;
+        }
+
+        if (value === "0" && calculatorState.expression === "") {
+          calculatorState.expression = "0";
+          updateCalculatorDisplay();
+          return;
+        }
+
+        if (value !== "0" && calculatorState.expression === "0") {
+          calculatorState.expression = value;
+          updateCalculatorDisplay();
+          return;
+        }
+
+        calculatorState.expression += value;
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorDecimal() {
+        if (calculatorState.lastActionWasEvaluate) {
+          calculatorState.expression = "";
+          calculatorState.lastActionWasEvaluate = false;
+        }
+
+        if (!calculatorState.expression) {
+          calculatorState.expression = "0.";
+          updateCalculatorDisplay();
+          return;
+        }
+
+        const lastNumber = calculatorState.expression.split(/[+\-*/]/).pop();
+        if (lastNumber.includes(".")) {
+          return;
+        }
+
+        calculatorState.expression += ".";
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorOperator(value) {
+        if (calculatorState.lastActionWasEvaluate) {
+          calculatorState.lastActionWasEvaluate = false;
+        }
+
+        if (!calculatorState.expression) {
+          if (value === "-") {
+            calculatorState.expression = "-";
+          }
+          updateCalculatorDisplay();
+          return;
+        }
+
+        const lastChar = calculatorState.expression.slice(-1);
+
+        if (isOperatorChar(lastChar)) {
+          calculatorState.expression = calculatorState.expression.slice(0, -1) + value;
+        } else {
+          calculatorState.expression += value;
+        }
+
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorSign() {
+        if (!calculatorState.expression) {
+          calculatorState.expression = "-";
+          updateCalculatorDisplay();
+          return;
+        }
+
+        const match = calculatorState.expression.match(/(-?\d*\.?\d+)(?!.*\d)/);
+        if (!match) {
+          return;
+        }
+
+        const lastNumber = match[0];
+        const lastIndex = calculatorState.expression.lastIndexOf(lastNumber);
+
+        const newLastNumber = String(Number(lastNumber) * -1);
+        calculatorState.expression =
+          calculatorState.expression.slice(0, lastIndex) + newLastNumber;
+
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorPercent() {
+        if (!calculatorState.expression) {
+          return;
+        }
+
+        const lastNumberMatch = calculatorState.expression.match(/-?\d*\.?\d+$/);
+        if (!lastNumberMatch) {
+          return;
+        }
+
+        const lastNumber = Number(lastNumberMatch[0]);
+        const percentValue = lastNumber / 100;
+        const beforePart = calculatorState.expression.slice(0, -lastNumberMatch[0].length);
+
+        calculatorState.expression = `${beforePart}${percentValue}`;
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorBackspace() {
+        if (!calculatorState.expression) {
+          return;
+        }
+
+        calculatorState.expression = calculatorState.expression.slice(0, -1);
+        calculatorState.lastActionWasEvaluate = false;
+        updateCalculatorDisplay();
+      }
+
+      function handleCalculatorClear() {
+        calculatorState.expression = "";
+        calculatorState.lastActionWasEvaluate = false;
+        updateCalculatorDisplay();
+      }
+
+      function evaluateCurrentCalculation() {
+        if (!calculatorState.expression) {
+          return;
+        }
+
+        const trimmedExpression = calculatorState.expression.trim();
+
+        if (!trimmedExpression) {
+          return;
+        }
+
+        try {
+          const result = evaluateExpression(trimmedExpression.replace(/\s+/g, ""));
+          const formattedResult = formatCalculatorNumber(result);
+          calculatorState.expression = String(result);
+          calculatorState.lastActionWasEvaluate = true;
+          calcResultEl.textContent = formattedResult;
+          addHistoryRecord("calculator", prettifyExpression(trimmedExpression), formattedResult);
+          updateCalculatorDisplay();
+        } catch (error) {
+          calculatorState.expression = "";
+          calculatorState.lastActionWasEvaluate = false;
+          calcResultEl.textContent = error && error.message === "Деление на ноль" ? "Деление на ноль" : "Ошибка";
+          calcExpressionEl.textContent = "0";
+        }
+      }
+
+      function handleCalculatorAction(action, value) {
+        switch (action) {
+          case "digit":
+            handleCalculatorDigit(value);
+            break;
+          case "decimal":
+            handleCalculatorDecimal();
+            break;
+          case "operator":
+            handleCalculatorOperator(value);
+            break;
+          case "sign":
+            handleCalculatorSign();
+            break;
+          case "percent":
+            handleCalculatorPercent();
+            break;
+          case "backspace":
+            handleCalculatorBackspace();
+            break;
+          case "clear":
+            handleCalculatorClear();
+            break;
+          case "equals":
+            evaluateCurrentCalculation();
+            break;
+          default:
+            break;
+        }
+      }
+
+      function addHistoryButtonHandlers() {
+        document.querySelectorAll(".key").forEach((button) => {
+          button.addEventListener("click", () => {
+            const action = button.dataset.action;
+            const value = button.dataset.value || "";
+            handleCalculatorAction(action, value);
+          });
+        });
+      }
+
+      function populateUnitOptions() {
+        const category = categorySelect.value;
+
+        const optionMap = UNIT_GROUPS[category];
+        const entries = Object.entries(optionMap);
+
+        const buildLabel = (key) => UNIT_LABELS[category][key] || key;
+
+        const fromOptions = entries
+          .map(([code]) => `<option value="${code}">${buildLabel(code)}</option>`)
+          .join("");
+
+        const toOptions = entries
+          .map(([code]) => `<option value="${code}">${buildLabel(code)}</option>`)
+          .join("");
+
+        fromUnitSelect.innerHTML = fromOptions;
+        toUnitSelect.innerHTML = toOptions;
+
+        if (entries.length > 0) {
+          fromUnitSelect.value = entries[0][0];
+          toUnitSelect.value = entries[1] ? entries[1][0] : entries[0][0];
+        }
+
+        currencyNote.textContent =
+          category === "currency"
+            ? "Демо-курсы: валюта использует фиксированные демонстрационные курсы."
+            : "Демо-курсы: валюта использует фиксированные демонстрационные курсы.";
+
+        if (category !== "currency") {
+          currencyNote.textContent = "Демо-курсы: валюта использует фиксированные демонстрационные курсы.";
+        }
+      }
+
+      function convertTemperature(value, fromUnit, toUnit) {
+        const celsius = fromUnit === "C"
+          ? value
+          : fromUnit === "F"
+            ? (value - 32) * 5 / 9
+            : value - 273.15;
+
+        if (toUnit === "C") {
+          return celsius;
+        }
+
+        if (toUnit === "F") {
+          return (celsius * 9) / 5 + 32;
+        }
+
+        return celsius + 273.15;
+      }
+
+      function convertBetweenUnits(category, value, fromUnit, toUnit) {
+        if (category === "temperature") {
+          return convertTemperature(value, fromUnit, toUnit);
+        }
+
+        const baseValue = value * UNIT_GROUPS[category][fromUnit];
+        const targetValue = baseValue / UNIT_GROUPS[category][toUnit];
+        return targetValue;
+      }
+
+      function formatConvertedNumber(value) {
+        if (!Number.isFinite(value)) {
+          return "Ошибка";
+        }
+
+        if (Math.abs(value) < 1e-12) {
+          return "0";
+        }
+
+        const formatted = Number(value.toPrecision(6)).toString();
+        return formatted.replace(/\.0+$/, "").replace(/(\.\d*?[1-9])0+$/, "$1");
+      }
+
+      function updateRates() {
+        return UNIT_GROUPS.currency;
+      }
+
+      function processConverter() {
+        const rawInput = fromValueInput.value.trim();
+
+        if (rawInput === "" || rawInput === "-" || rawInput === "." || rawInput === "-.") {
+          toValueInput.value = "Введите число";
+          convertedValueEl.textContent = "Введите число";
+          return;
+        }
+
+        const numericValue = Number(rawInput.replace(/,/g, "."));
+        if (!Number.isFinite(numericValue)) {
+          toValueInput.value = "Введите число";
+          convertedValueEl.textContent = "Введите число";
+          return;
+        }
+
+        const category = categorySelect.value;
+        const from = fromUnitSelect.value;
+        const to = toUnitSelect.value;
+
+        let result = 0;
+
+        if (category === "currency") {
+          const rates = updateRates();
+          const usdValue = numericValue / rates[from];
+          result = usdValue * rates[to];
+        } else {
+          result = convertBetweenUnits(category, numericValue, from, to);
+        }
+
+        const formattedResult = formatConvertedNumber(result);
+        toValueInput.value = formattedResult;
+        convertedValueEl.textContent = formattedResult;
+
+        addHistoryRecord(
+          "converter",
+          `${formatConvertedNumber(numericValue)} ${UNIT_LABELS[category][from]} → ${UNIT_LABELS[category][to]}`,
+          formattedResult
+        );
+      }
+
+      function bindConverterEvents() {
+        categorySelect.addEventListener("change", () => {
+          populateUnitOptions();
+          fromValueInput.value = "";
+          toValueInput.value = "";
+          convertedValueEl.textContent = "0";
+        });
+
+        fromValueInput.addEventListener("input", () => {
+          const value = fromValueInput.value.trim();
+
+          if (value === "") {
+            toValueInput.value = "";
+            convertedValueEl.textContent = "0";
+            return;
+          }
+
+          if (!/^[-+]?\d*\.?\d*$/.test(value) && !/^[-+]?\d*\.?\d+([eE][-+]?\d+)?$/.test(value)) {
+            toValueInput.value = "Введите число";
+            convertedValueEl.textContent = "Введите число";
+            return;
+          }
+
+          processConverter();
+        });
+
+        fromUnitSelect.addEventListener("change", processConverter);
+        toUnitSelect.addEventListener("change", processConverter);
+
+        swapUnitsBtn.addEventListener("click", () => {
+          const currentFrom = fromUnitSelect.value;
+          const currentTo = toUnitSelect.value;
+
+          fromUnitSelect.value = currentTo;
+          toUnitSelect.value = currentFrom;
+
+          processConverter();
+        });
+      }
+
+      function attachGlobalKeys() {
+        document.addEventListener("keydown", (event) => {
+          const key = event.key;
+
+          if (document.activeElement && ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+            if (key === "Enter" && document.activeElement === fromValueInput) {
+              event.preventDefault();
+              processConverter();
+            }
+            return;
+          }
+
+          if (/^[0-9]$/.test(key)) {
+            event.preventDefault();
+            handleCalculatorAction("digit", key);
+            return;
+          }
+
+          if (key === ".") {
+            event.preventDefault();
+            handleCalculatorAction("decimal");
+            return;
+          }
+
+          if (["+", "-", "*", "/"].includes(key)) {
+            event.preventDefault();
+            handleCalculatorAction("operator", key === "/" ? "/" : key);
+            return;
+          }
+
+          if (key === "Enter") {
+            event.preventDefault();
+            handleCalculatorAction("equals");
+            return;
+          }
+
+          if (key === "Backspace") {
+            event.preventDefault();
+            handleCalculatorAction("backspace");
+            return;
+          }
+
+          if (key === "Escape") {
+            event.preventDefault();
+            handleCalculatorAction("clear");
+            return;
+          }
+        });
+      }
+
+      function init() {
+        initTheme();
+        readHistory();
+        renderHistory();
+
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            setActiveTab(tab.dataset.tab);
+          });
+        });
+
+        clearHistoryBtn.addEventListener("click", clearHistory);
+
+        addHistoryButtonHandlers();
+        populateUnitOptions();
+        bindConverterEvents();
+        attachGlobalKeys();
+
+        updateCalculatorDisplay();
+      }
+
+      themeToggle.addEventListener("click", () => {
+        const currentTheme = document.body.getAttribute("data-theme");
+        applyTheme(currentTheme === "dark" ? "light" : "dark");
+      });
+
+      init();
+    })();
+  </script>
+</body>
+</html>
